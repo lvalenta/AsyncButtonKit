@@ -21,14 +21,14 @@ extension View {
     }
     
     @inlinable
-    public func readMaxSize(onChange: @Sendable @escaping (CGSize) -> Void) -> some View {
+    public func readSizeWithMaxHeight(onChange: @Sendable @escaping (CGFloat) -> Void) -> some View {
         background(
             GeometryReader { metrics in
                 Color.clear
-                    .preference(key: MaxSizePreferenceKey.self, value: metrics.size)
+                    .preference(key: MaxHeightSizePreferenceKey.self, value: metrics.size.height)
             }
         )
-        .onPreferenceChange(MaxSizePreferenceKey.self, perform: onChange)
+        .onPreferenceChange(MaxHeightSizePreferenceKey.self, perform: onChange)
     }
 
     
@@ -40,10 +40,10 @@ public struct SizePreferenceKey: PreferenceKey {
     public static let defaultValue: CGSize = .zero
 }
 
-public struct MaxSizePreferenceKey: PreferenceKey {
-    public static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+public struct MaxHeightSizePreferenceKey: PreferenceKey {
+    public static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = max(value, nextValue())
     }
 
-    public static let defaultValue: CGSize = .zero
+    public static let defaultValue: CGFloat = .zero
 }
