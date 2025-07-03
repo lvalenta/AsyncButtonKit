@@ -19,10 +19,30 @@ extension View {
         )
         .onPreferenceChange(SizePreferenceKey.self, perform: onChange)
     }
+    
+    @inlinable
+    public func readMaxHeight() -> some View {
+        background(
+            GeometryReader { metrics in
+                Color.clear
+                    .preference(key: MaxHeightPreferenceKey.self, value: metrics.size.height)
+            }
+        )
+    }
+
+    
 }
 
 public struct SizePreferenceKey: PreferenceKey {
     public static func reduce(value: inout CGSize, nextValue: () -> CGSize) {}
 
     public static let defaultValue: CGSize = .zero
+}
+
+public struct MaxHeightPreferenceKey: PreferenceKey {
+    public static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+
+    public static let defaultValue: CGFloat = .zero
 }
