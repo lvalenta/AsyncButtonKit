@@ -21,14 +21,13 @@ extension View {
     }
     
     @inlinable
-    public func readMaxHeight(onChange: @Sendable @escaping (CGFloat) -> Void) -> some View {
+    public func readMaxHeight() -> some View {
         background(
             GeometryReader { metrics in
                 Color.clear
                     .preference(key: MaxHeightPreferenceKey.self, value: metrics.size.height)
             }
         )
-        .onPreferenceChange(MaxHeightPreferenceKey.self, perform: onChange)
     }
 
     
