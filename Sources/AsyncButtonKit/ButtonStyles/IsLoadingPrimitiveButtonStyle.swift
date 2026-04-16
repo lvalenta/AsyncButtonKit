@@ -11,7 +11,6 @@ import SwiftUI
 /// A simple PrimitiveButtonStyle that displays a button with loading state handling.
 /// When isLoading is set to true, the button is overlayed by a progress view.
 /// To configure progressView, all it takes is to add a modifier for progressView
-@available(macOS 12.0, iOS 15.0, *)
 public struct IsLoadingPrimitiveButtonStyle: PrimitiveButtonStyle {
     
     /// Environment variable to track loading state.
@@ -40,7 +39,6 @@ public struct IsLoadingPrimitiveButtonStyle: PrimitiveButtonStyle {
     }
 }
 
-@available(macOS 12.0, iOS 15.0, *)
 public extension PrimitiveButtonStyle where Self == IsLoadingPrimitiveButtonStyle {
     
     /// A simple PrimitiveButtonStyle that displays a button with loading state handling.
@@ -54,7 +52,7 @@ public extension PrimitiveButtonStyle where Self == IsLoadingPrimitiveButtonStyl
 }
 
 #if DEBUG
-@available(iOS 17.0, macOS 14.0, *)
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 #Preview {
     AsyncButton("Test async button style") {
         print("Doing activity")

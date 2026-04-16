@@ -25,7 +25,6 @@ public struct AsyncButtonOptions: OptionSet, Sendable {
 /// A button that initiates an asynchronous action when tapped.
 ///
 /// This button is designed to handle concurrent or repeated taps by using the behaviors defined in `AsyncButtonOptions`.
-@available(iOS 15.0, macOS 12.0, *)
 public struct AsyncButton<Label: View, Identifier: Equatable>: View {
 
     /// The unique identifier for the button.
@@ -43,6 +42,9 @@ public struct AsyncButton<Label: View, Identifier: Equatable>: View {
     /// The options that define the button's behavior when it's tapped.
     public var options: AsyncButtonOptions
 
+    /// An optional semantic role describing the button's purpose.
+    public var role: ButtonRole?
+
     /// A private state that tracks whether the button's action is currently executing.
     @State private var isExecutingInternal = false
 
@@ -54,16 +56,19 @@ public struct AsyncButton<Label: View, Identifier: Equatable>: View {
     /// Creates a new asynchronous button with the given parameters.
     ///
     /// - Parameters:
+    ///   - role: An optional semantic role describing the button.
     ///   - executingID: The unique identifier for the button.
     ///   - isExecuting: A binding that sets and stores the currently executing identifier.
     ///   - options: The options that define the button's behavior when it's tapped.
     ///   - action: The asynchronous action to perform when the button is tapped.
     ///   - label: A closure that returns the button's visual label.
-    public init(executingID: Identifier,
+    public init(role: ButtonRole? = nil,
+                executingID: Identifier,
                 isExecuting: Binding<Identifier?>,
                 options: AsyncButtonOptions = [],
                 action: @escaping () async -> Void,
                 label: () -> Label) {
+        self.role = role
         self.action = action
         self.id = executingID
         self.options = options
@@ -151,7 +156,7 @@ public struct AsyncButton<Label: View, Identifier: Equatable>: View {
             options: options
         )
 
-        return Button(action: {
+        return Button(role: role, action: {
             guard state.isNewExecutingAllowed else { return }
 
             if state.shouldCancelPreviousTask {
@@ -182,62 +187,90 @@ public struct AsyncButton<Label: View, Identifier: Equatable>: View {
 }
 
 /// An extension for AsyncButton with a default label of type Text.
-@available(iOS 15.0, macOS 12.0, *)
 extension AsyncButton where Label == Text {
-    
+
     /// Creates an asynchronous button with the given title and action.
     ///
     /// - Parameters:
     ///   - title: The title of the button.
-    ///   - executingID: The unique identifier of the button that is used for setting isExecuting binding.
-    ///   - isExecuting: A Binding that stores and sets the currently executing identifier.
+    ///   - role: An optional semantic role describing the button.
+    ///   - executingID: The unique identifier of the button that is used for setting the `isExecuting` binding.
+    ///   - isExecuting: A binding that stores and sets the currently executing identifier.
     ///   - options: The options that define the button's behavior when it's tapped.
     ///   - action: The asynchronous action to perform when the button is tapped.
     @inlinable
     public init(_ title: some StringProtocol,
+                role: ButtonRole? = nil,
                 executingID: Identifier,
                 isExecuting: Binding<Identifier?>,
                 options: AsyncButtonOptions = [],
                 action: @escaping () async -> Void) {
-        self.init(executingID: executingID, isExecuting: isExecuting, options: options, action: action) { Text(title) }
+        self.init(role: role, executingID: executingID, isExecuting: isExecuting, options: options, action: action) { Text(title) }
+    }
+
+    /// Creates an asynchronous button with a localized title and action.
+    ///
+    /// - Parameters:
+    ///   - titleKey: The localized key used to create the button's title.
+    ///   - role: An optional semantic role describing the button.
+    ///   - executingID: The unique identifier of the button that is used for setting the `isExecuting` binding.
+    ///   - isExecuting: A binding that stores and sets the currently executing identifier.
+    ///   - options: The options that define the button's behavior when it's tapped.
+    ///   - action: The asynchronous action to perform when the button is tapped.
+    @inlinable
+    public init(_ titleKey: LocalizedStringKey,
+                role: ButtonRole? = nil,
+                executingID: Identifier,
+                isExecuting: Binding<Identifier?>,
+                options: AsyncButtonOptions = [],
+                action: @escaping () async -> Void) {
+        self.init(role: role, executingID: executingID, isExecuting: isExecuting, options: options, action: action) { Text(titleKey) }
     }
 }
 
 /// An extension for AsyncButton with an empty identifier.
-@available(iOS 15.0, macOS 12.0, *)
 extension AsyncButton where Identifier == EmptyAsyncButtonIdentifier {
-    
-    /// Creates an asynchronous button with the given action, label, and binding for execution state.
+
+    /// Creates an asynchronous button with a boolean execution-state binding and a custom label.
+    ///
     /// - Parameters:
-    ///   - isExecuting: A Binding that stores and sets the execution state.
+    ///   - role: An optional semantic role describing the button.
+    ///   - isExecuting: A binding that stores and sets the execution state.
+    ///   - options: The options that define the button's behavior when it's tapped.
     ///   - action: The asynchronous action to perform when the button is tapped.
     ///   - label: A closure returning the label of the button.
     @inlinable
-    public init(isExecuting: Binding<Bool>,
+    public init(role: ButtonRole? = nil,
+                isExecuting: Binding<Bool>,
                 options: AsyncButtonOptions = [],
                 action: @escaping () async -> Void,
                 label: () -> Label) {
         self.init(
+            role: role,
             executingID: EmptyAsyncButtonIdentifier(),
             isExecuting: Binding(
                 get: { isExecuting.wrappedValue ? EmptyAsyncButtonIdentifier() : nil },
-                set: { isExecuting.wrappedValue = $0 != nil })
-            , options: options,
+                set: { isExecuting.wrappedValue = $0 != nil }),
+            options: options,
             action: action,
             label: label
         )
     }
 
     /// Creates an asynchronous button with the given action and label.
+    ///
     /// - Parameters:
+    ///   - role: An optional semantic role describing the button.
     ///   - options: The options that define the button's behavior when it's tapped.
     ///   - action: The asynchronous action to perform when the button is tapped.
     ///   - label: A closure returning the label of the button.
     @inlinable
-    public init(options: AsyncButtonOptions = [],
+    public init(role: ButtonRole? = nil,
+                options: AsyncButtonOptions = [],
                 action: @escaping () async -> Void,
                 label: () -> Label) {
         self.init(
+            role: role,
             executingID: EmptyAsyncButtonIdentifier(),
             isExecuting: .constant(nil),
             options: options,
@@ -248,33 +281,200 @@ extension AsyncButton where Identifier == EmptyAsyncButtonIdentifier {
 }
 
 /// An extension for AsyncButton with an empty identifier and a default label of type Text.
-@available(iOS 15.0, macOS 12.0, *)
 extension AsyncButton where Identifier == EmptyAsyncButtonIdentifier, Label == Text {
-    
+
     /// Creates an asynchronous button with the given title and action.
+    ///
     /// - Parameters:
     ///   - title: The title of the button.
+    ///   - role: An optional semantic role describing the button.
     ///   - options: The options that define the button's behavior when it's tapped.
     ///   - action: The asynchronous action to perform when the button is tapped.
     @inlinable
     public init(_ title: some StringProtocol,
+                role: ButtonRole? = nil,
                 options: AsyncButtonOptions = [],
                 action: @escaping () async -> Void) {
-        self.init(options: options, action: action, label: { Text(title) })
+        self.init(role: role, options: options, action: action, label: { Text(title) })
     }
 
-    /// Creates an asynchronous button with the given title, binding for execution state, and action.
+    /// Creates an asynchronous button with the given title, execution-state binding, and action.
+    ///
     /// - Parameters:
     ///   - title: The title of the button.
-    ///   - isExecuting: A Binding that stores and sets the execution state.
+    ///   - role: An optional semantic role describing the button.
+    ///   - isExecuting: A binding that stores and sets the execution state.
     ///   - options: The options that define the button's behavior when it's tapped.
     ///   - action: The asynchronous action to perform when the button is tapped.
     @inlinable
     public init(_ title: some StringProtocol,
+                role: ButtonRole? = nil,
                 isExecuting: Binding<Bool>,
                 options: AsyncButtonOptions = [],
                 action: @escaping () async -> Void) {
-        self.init(isExecuting: isExecuting, options: options, action: action, label: { Text(title) })
+        self.init(role: role, isExecuting: isExecuting, options: options, action: action, label: { Text(title) })
+    }
+
+    /// Creates an asynchronous button with a localized title and action.
+    ///
+    /// - Parameters:
+    ///   - titleKey: The localized key used to create the button's title.
+    ///   - role: An optional semantic role describing the button.
+    ///   - options: The options that define the button's behavior when it's tapped.
+    ///   - action: The asynchronous action to perform when the button is tapped.
+    @inlinable
+    public init(_ titleKey: LocalizedStringKey,
+                role: ButtonRole? = nil,
+                options: AsyncButtonOptions = [],
+                action: @escaping () async -> Void) {
+        self.init(role: role, options: options, action: action, label: { Text(titleKey) })
+    }
+
+    /// Creates an asynchronous button with a localized title, execution-state binding, and action.
+    ///
+    /// - Parameters:
+    ///   - titleKey: The localized key used to create the button's title.
+    ///   - role: An optional semantic role describing the button.
+    ///   - isExecuting: A binding that stores and sets the execution state.
+    ///   - options: The options that define the button's behavior when it's tapped.
+    ///   - action: The asynchronous action to perform when the button is tapped.
+    @inlinable
+    public init(_ titleKey: LocalizedStringKey,
+                role: ButtonRole? = nil,
+                isExecuting: Binding<Bool>,
+                options: AsyncButtonOptions = [],
+                action: @escaping () async -> Void) {
+        self.init(role: role, isExecuting: isExecuting, options: options, action: action, label: { Text(titleKey) })
+    }
+}
+
+/// iOS 17+ `systemImage` variants for AsyncButton with an empty identifier,
+/// wrapping `SwiftUI.Label<Text, Image>`.
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
+extension AsyncButton where Identifier == EmptyAsyncButtonIdentifier, Label == SwiftUI.Label<Text, Image> {
+
+    /// Creates an asynchronous button with a title and an SF Symbol icon.
+    ///
+    /// - Parameters:
+    ///   - title: The title of the button.
+    ///   - systemImage: The name of the SF Symbol to display alongside the title.
+    ///   - role: An optional semantic role describing the button.
+    ///   - options: The options that define the button's behavior when it's tapped.
+    ///   - action: The asynchronous action to perform when the button is tapped.
+    @inlinable
+    public init(_ title: some StringProtocol,
+                systemImage: String,
+                role: ButtonRole? = nil,
+                options: AsyncButtonOptions = [],
+                action: @escaping () async -> Void) {
+        self.init(role: role, options: options, action: action, label: { SwiftUI.Label(title, systemImage: systemImage) })
+    }
+
+    /// Creates an asynchronous button with a localized title and an SF Symbol icon.
+    ///
+    /// - Parameters:
+    ///   - titleKey: The localized key used to create the button's title.
+    ///   - systemImage: The name of the SF Symbol to display alongside the title.
+    ///   - role: An optional semantic role describing the button.
+    ///   - options: The options that define the button's behavior when it's tapped.
+    ///   - action: The asynchronous action to perform when the button is tapped.
+    @inlinable
+    public init(_ titleKey: LocalizedStringKey,
+                systemImage: String,
+                role: ButtonRole? = nil,
+                options: AsyncButtonOptions = [],
+                action: @escaping () async -> Void) {
+        self.init(role: role, options: options, action: action, label: { SwiftUI.Label(titleKey, systemImage: systemImage) })
+    }
+
+    /// Creates an asynchronous button with a title, SF Symbol icon, and execution-state binding.
+    ///
+    /// - Parameters:
+    ///   - title: The title of the button.
+    ///   - systemImage: The name of the SF Symbol to display alongside the title.
+    ///   - role: An optional semantic role describing the button.
+    ///   - isExecuting: A binding that stores and sets the execution state.
+    ///   - options: The options that define the button's behavior when it's tapped.
+    ///   - action: The asynchronous action to perform when the button is tapped.
+    @inlinable
+    public init(_ title: some StringProtocol,
+                systemImage: String,
+                role: ButtonRole? = nil,
+                isExecuting: Binding<Bool>,
+                options: AsyncButtonOptions = [],
+                action: @escaping () async -> Void) {
+        self.init(role: role, isExecuting: isExecuting, options: options, action: action, label: { SwiftUI.Label(title, systemImage: systemImage) })
+    }
+
+    /// Creates an asynchronous button with a localized title, SF Symbol icon, and execution-state binding.
+    ///
+    /// - Parameters:
+    ///   - titleKey: The localized key used to create the button's title.
+    ///   - systemImage: The name of the SF Symbol to display alongside the title.
+    ///   - role: An optional semantic role describing the button.
+    ///   - isExecuting: A binding that stores and sets the execution state.
+    ///   - options: The options that define the button's behavior when it's tapped.
+    ///   - action: The asynchronous action to perform when the button is tapped.
+    @inlinable
+    public init(_ titleKey: LocalizedStringKey,
+                systemImage: String,
+                role: ButtonRole? = nil,
+                isExecuting: Binding<Bool>,
+                options: AsyncButtonOptions = [],
+                action: @escaping () async -> Void) {
+        self.init(role: role, isExecuting: isExecuting, options: options, action: action, label: { SwiftUI.Label(titleKey, systemImage: systemImage) })
+    }
+}
+
+/// iOS 17+ `systemImage` variants for AsyncButton with a custom identifier,
+/// wrapping `SwiftUI.Label<Text, Image>`.
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
+extension AsyncButton where Label == SwiftUI.Label<Text, Image> {
+
+    /// Creates an asynchronous button with a title, SF Symbol icon, and an identifier-based execution binding.
+    ///
+    /// - Parameters:
+    ///   - title: The title of the button.
+    ///   - systemImage: The name of the SF Symbol to display alongside the title.
+    ///   - role: An optional semantic role describing the button.
+    ///   - executingID: The unique identifier of the button that is used for setting the `isExecuting` binding.
+    ///   - isExecuting: A binding that stores and sets the currently executing identifier.
+    ///   - options: The options that define the button's behavior when it's tapped.
+    ///   - action: The asynchronous action to perform when the button is tapped.
+    @inlinable
+    public init(_ title: some StringProtocol,
+                systemImage: String,
+                role: ButtonRole? = nil,
+                executingID: Identifier,
+                isExecuting: Binding<Identifier?>,
+                options: AsyncButtonOptions = [],
+                action: @escaping () async -> Void) {
+        self.init(role: role, executingID: executingID, isExecuting: isExecuting, options: options, action: action) {
+            SwiftUI.Label(title, systemImage: systemImage)
+        }
+    }
+
+    /// Creates an asynchronous button with a localized title, SF Symbol icon, and an identifier-based execution binding.
+    ///
+    /// - Parameters:
+    ///   - titleKey: The localized key used to create the button's title.
+    ///   - systemImage: The name of the SF Symbol to display alongside the title.
+    ///   - role: An optional semantic role describing the button.
+    ///   - executingID: The unique identifier of the button that is used for setting the `isExecuting` binding.
+    ///   - isExecuting: A binding that stores and sets the currently executing identifier.
+    ///   - options: The options that define the button's behavior when it's tapped.
+    ///   - action: The asynchronous action to perform when the button is tapped.
+    @inlinable
+    public init(_ titleKey: LocalizedStringKey,
+                systemImage: String,
+                role: ButtonRole? = nil,
+                executingID: Identifier,
+                isExecuting: Binding<Identifier?>,
+                options: AsyncButtonOptions = [],
+                action: @escaping () async -> Void) {
+        self.init(role: role, executingID: executingID, isExecuting: isExecuting, options: options, action: action) {
+            SwiftUI.Label(titleKey, systemImage: systemImage)
+        }
     }
 }
 
@@ -285,7 +485,7 @@ public struct EmptyAsyncButtonIdentifier: Equatable {
 }
 
 #if DEBUG
-@available(iOS 17.0, macOS 14.0, *)
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 private func asyncButtonPreviewAction(timeInSeconds: UInt64) async {
     print("Doing activity")
     try? await Task.sleep(nanoseconds: NSEC_PER_SEC * timeInSeconds)
@@ -297,7 +497,7 @@ private func asyncButtonPreviewAction(timeInSeconds: UInt64) async {
     }
 }
 
-@available(iOS 17.0, macOS 14.0, *)
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 #Preview {
     VStack(spacing: 16) {
         AsyncButton("Test async button style", options: [.allowsConcurrentExecutions, .cancelsRunningExecution]) {
@@ -307,7 +507,7 @@ private func asyncButtonPreviewAction(timeInSeconds: UInt64) async {
     }
 }
 
-@available(iOS 17.0, macOS 14.0, *)
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 #Preview("Synchronized AsyncButtons") {
     @Previewable @State var isExecuting: Bool = false
 
@@ -324,7 +524,7 @@ private func asyncButtonPreviewAction(timeInSeconds: UInt64) async {
     }
 }
 
-@available(iOS 17.0, macOS 14.0, *)
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 #Preview("Synchronized AsyncButtons with IDs") {
     @Previewable @State var executingID: Int? = nil
 
@@ -341,7 +541,7 @@ private func asyncButtonPreviewAction(timeInSeconds: UInt64) async {
     }
 }
 
-@available(iOS 17.0, macOS 14.0, *)
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 #Preview("Different ID AsyncButton") {
     @Previewable @State var executingID: Int? = nil
 

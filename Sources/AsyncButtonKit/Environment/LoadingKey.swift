@@ -11,7 +11,6 @@ public struct LoadingKey: EnvironmentKey {
     public static let defaultValue: Bool = false
 }
 
-@available(macOS 10.15, *)
 public extension EnvironmentValues {
     @inlinable
     var isLoading: Bool {
@@ -20,7 +19,6 @@ public extension EnvironmentValues {
     }
 }
 
-@available(macOS 10.15, *)
 public extension View {
     @inlinable
     func isLoading(_ isLoading: Bool) -> some View {
