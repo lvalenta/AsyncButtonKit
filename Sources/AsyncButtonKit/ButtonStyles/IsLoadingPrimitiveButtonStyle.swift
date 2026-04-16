@@ -53,13 +53,13 @@ public extension PrimitiveButtonStyle where Self == IsLoadingPrimitiveButtonStyl
     }
 }
 
-@available(iOS 15.0, macOS 12.0, *)
-struct PrimitiveButtonStyle_Previews: PreviewProvider {
-    static var previews: some View {
-        AsyncButton("Test async button style") {
-            print("Doing activity")
-            try? await Task.sleep(nanoseconds: NSEC_PER_SEC * 5)
-        }
-        .buttonStyle(.isLoading)
+#if DEBUG
+@available(iOS 17.0, macOS 14.0, *)
+#Preview {
+    AsyncButton("Test async button style") {
+        print("Doing activity")
+        try? await Task.sleep(nanoseconds: NSEC_PER_SEC * 5)
     }
+    .buttonStyle(.isLoading)
 }
+#endif

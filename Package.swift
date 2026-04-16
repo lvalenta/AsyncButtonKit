@@ -4,25 +4,25 @@
 import PackageDescription
 
 let package = Package(
-    name: "CleevioUI",
+    name: "AsyncButtonKit",
     platforms: [
         .iOS(.v13), .watchOS(.v8)
     ],
     products: [
         .library(
-            name: "CleevioUI",
-            targets: ["CleevioUI"]
+            name: "AsyncButtonKit",
+            targets: ["AsyncButtonKit"]
         )
     ],
     dependencies: [],
     targets: [
         .target(
-            name: "CleevioUI",
+            name: "AsyncButtonKit",
             dependencies: []
         ),
         .testTarget(
-            name: "CleevioUITests",
-            dependencies: ["CleevioUI"]),
+            name: "AsyncButtonKitTests",
+            dependencies: ["AsyncButtonKit"]),
     ],
     swiftLanguageModes: [.v6]
 )

@@ -5,7 +5,7 @@
 //  Created by Lukáš Valenta on 28.11.2023.
 //
 
-@testable import CleevioUI
+@testable import AsyncButtonKit
 import XCTest
 import SwiftUI
 

@@ -284,98 +284,77 @@ public struct EmptyAsyncButtonIdentifier: Equatable {
     init() { }
 }
 
-@available(iOS 15.0, macOS 12.0, *)
-struct AsyncButton_Previews: PreviewProvider {
-    static var state: some ButtonStyle {
-        .state(
-            labelTextColorSet: StateButton_Previews.SolidPreviewStyle.blue.labelTextColorSet,
-            labelColorSet: StateButton_Previews.SolidPreviewStyle.blue.labelColorSet,
-            outlineColorSet: StateButton_Previews.SolidPreviewStyle.blue.outlineColorSet
-        )
-    }
+#if DEBUG
+@available(iOS 17.0, macOS 14.0, *)
+private func asyncButtonPreviewAction(timeInSeconds: UInt64) async {
+    print("Doing activity")
+    try? await Task.sleep(nanoseconds: NSEC_PER_SEC * timeInSeconds)
 
-    static func buttonAction(timeInSeconds: UInt64) async {
-        print("Doing activity")
-        try? await Task.sleep(nanoseconds: NSEC_PER_SEC * timeInSeconds)
-
-        if Task.isCancelled {
-            print("Task is canceled")
-        } else {
-            print("Finished")
-        }
-    }
-
-    static var previews: some View {
-        Group {
-            VStack(spacing: 16) {
-                AsyncButton("Test async button style", options: [.allowsConcurrentExecutions, .cancelsRunningExecution]) {
-                    await buttonAction(timeInSeconds: 5)
-                }
-                .buttonStyle(.isLoading)
-                
-                AsyncButton("Test solid with async button style") {
-                    await buttonAction(timeInSeconds: 5)
-                }
-                .buttonStyle(state)
-                .buttonStyle(.isLoading)
-                
-                AsyncButton("Test async with solid button style") {
-                    await buttonAction(timeInSeconds: 5)
-                }
-                .buttonStyle(.isLoading)
-                .buttonStyle(state)
-            }
-
-            synchronizedAsyncButtons
-
-            differentIDAsyncButtons
-        }
-    }
-
-    static var synchronizedAsyncButtons: some View {
-        StatePreview(initial: false) { binding in
-            VStack {
-                AsyncButton("AsyncButton", isExecuting: binding) {
-                    await buttonAction(timeInSeconds: 5)
-                }
-                .buttonStyle(.isLoading)
-                
-                AsyncButton("Bindable solid button with  async style", isExecuting: binding) {
-                    await buttonAction(timeInSeconds: 1)
-                }
-                .buttonStyle(state)
-                .buttonStyle(.isLoading)
-
-                AsyncButton("AsyncButton with solid style", isExecuting: binding) {
-                    await buttonAction(timeInSeconds: 3)
-                }
-                .buttonStyle(.isLoading)
-                .buttonStyle(state)
-            }
-        }
-        .previewDisplayName("Synchronized AsyncButtons")
-    }
-
-    static var differentIDAsyncButtons: some View {
-        StatePreview(initial: Optional<Int>.none) { binding in
-            VStack(spacing: 16) {
-                AsyncButton("AsyncButton with ID 1", executingID: 1, isExecuting: binding) {
-                    await buttonAction(timeInSeconds: 5)
-                }
-                .buttonStyle(.isLoading)
-             
-                AsyncButton("Bindable solid button with async style with ID 3", executingID: 3, isExecuting: binding) {
-                    await buttonAction(timeInSeconds: 1)
-                }
-                .buttonStyle(state)
-                .buttonStyle(.isLoading)
-
-                AsyncButton("Bindable solid button with  async style with ID 1", executingID: 1, isExecuting: binding) {
-                    await buttonAction(timeInSeconds: 3)
-                }
-                .buttonStyle(state)
-            }
-        }
-        .previewDisplayName("DIfferent ID AsyncButton")
+    if Task.isCancelled {
+        print("Task is canceled")
+    } else {
+        print("Finished")
     }
 }
+
+@available(iOS 17.0, macOS 14.0, *)
+#Preview {
+    VStack(spacing: 16) {
+        AsyncButton("Test async button style", options: [.allowsConcurrentExecutions, .cancelsRunningExecution]) {
+            await asyncButtonPreviewAction(timeInSeconds: 5)
+        }
+        .buttonStyle(.isLoading)
+    }
+}
+
+@available(iOS 17.0, macOS 14.0, *)
+#Preview("Synchronized AsyncButtons") {
+    @Previewable @State var isExecuting: Bool = false
+
+    VStack {
+        AsyncButton("AsyncButton", isExecuting: $isExecuting) {
+            await asyncButtonPreviewAction(timeInSeconds: 5)
+        }
+        .buttonStyle(.isLoading)
+
+        AsyncButton("AsyncButton2", isExecuting: $isExecuting) {
+            await asyncButtonPreviewAction(timeInSeconds: 5)
+        }
+        .buttonStyle(.isLoading)
+    }
+}
+
+@available(iOS 17.0, macOS 14.0, *)
+#Preview("Synchronized AsyncButtons with IDs") {
+    @Previewable @State var executingID: Int? = nil
+
+    VStack {
+        AsyncButton("AsyncButton with ID 1", executingID: 1, isExecuting: $executingID) {
+            await asyncButtonPreviewAction(timeInSeconds: 5)
+        }
+        .buttonStyle(.isLoading)
+
+        AsyncButton("Second AsyncButton with ID 1", executingID: 1, isExecuting: $executingID) {
+            await asyncButtonPreviewAction(timeInSeconds: 1)
+        }
+        .buttonStyle(.isLoading)
+    }
+}
+
+@available(iOS 17.0, macOS 14.0, *)
+#Preview("Different ID AsyncButton") {
+    @Previewable @State var executingID: Int? = nil
+
+    VStack(spacing: 16) {
+        AsyncButton("AsyncButton with ID 1", executingID: 1, isExecuting: $executingID) {
+            await asyncButtonPreviewAction(timeInSeconds: 5)
+        }
+        .buttonStyle(.isLoading)
+
+        AsyncButton("AsyncButton with ID 3", executingID: 3, isExecuting: $executingID) {
+            await asyncButtonPreviewAction(timeInSeconds: 1)
+        }
+        .buttonStyle(.isLoading)
+    }
+}
+#endif
