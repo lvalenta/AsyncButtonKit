@@ -163,26 +163,33 @@ public struct AsyncButton<Label: View, Identifier: Equatable>: View {
                 savedTask?.cancel()
             }
 
-            savedTask = Task { @MainActor in
-                if isExecuting != id {
-                    isExecuting = id
-                }
-
-                if !isExecutingInternal {
-                    isExecutingInternal = true
-                }
-
-                await action()
-
-                if !Task.isCancelled {
-                    isExecuting = nil
-                    isExecutingInternal = false
-                }
+            if #available(iOS 26.0, watchOS 26.0, tvOS 26.0, macOS 26.0, *) {
+                savedTask = Task.immediate(operation: onButtonTap)
+            } else {
+                savedTask = Task(operation: onButtonTap)
             }
         }, label: { label })
         .buttonStyle(.isLoading(disabledWhenLoading: false))
         .isLoading(state.isButtonLoading)
         .disabled(state.isButtonDisabled)
+    }
+
+    @MainActor
+    private func onButtonTap() async {
+        if isExecuting != id {
+            isExecuting = id
+        }
+
+        if !isExecutingInternal {
+            isExecutingInternal = true
+        }
+
+        await action()
+
+        if !Task.isCancelled {
+            isExecuting = nil
+            isExecutingInternal = false
+        }
     }
 }
 
