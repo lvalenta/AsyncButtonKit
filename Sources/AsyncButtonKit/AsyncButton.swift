@@ -67,7 +67,7 @@ public struct AsyncButton<Label: View, Identifier: Equatable>: View {
                 isExecuting: Binding<Identifier?>,
                 options: AsyncButtonOptions = [],
                 action: @escaping () async -> Void,
-                label: () -> Label) {
+                @ViewBuilder label: () -> Label) {
         self.role = role
         self.action = action
         self.id = executingID
@@ -244,7 +244,7 @@ extension AsyncButton where Identifier == EmptyAsyncButtonIdentifier {
                 isExecuting: Binding<Bool>,
                 options: AsyncButtonOptions = [],
                 action: @escaping () async -> Void,
-                label: () -> Label) {
+                @ViewBuilder label: () -> Label) {
         self.init(
             role: role,
             executingID: EmptyAsyncButtonIdentifier(),
@@ -268,7 +268,7 @@ extension AsyncButton where Identifier == EmptyAsyncButtonIdentifier {
     public init(role: ButtonRole? = nil,
                 options: AsyncButtonOptions = [],
                 action: @escaping () async -> Void,
-                label: () -> Label) {
+                @ViewBuilder label: () -> Label) {
         self.init(
             role: role,
             executingID: EmptyAsyncButtonIdentifier(),
